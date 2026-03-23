@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Rock Repairs Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a2342 0%, #1a3a52 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 5px solid #00a8e8;
+        }
+
+        header h1 {
+            font-size: 32px;
+            color: #0a2342;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+
+        header .subtitle {
+            font-size: 16px;
+            color: #666;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        header .timestamp {
+            font-size: 14px;
+            color: #999;
+            font-style: italic;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-top: 4px solid #00a8e8;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            color: #666;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .stat-card .number {
+            font-size: 42px;
+            color: #0a2342;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .unit {
+            font-size: 14px;
+            color: #999;
+        }
+
+        /* Main Sections */
+        .section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            background: linear-gradient(135deg, #0a2342 0%, #1a3a52 100%);
+            color: white;
+            padding: 20px;
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .section-header .count {
+            background: #00a8e8;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .section-content {
+            padding: 20px;
+        }
+
+        /* Filter Buttons */
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover {
+            border-color: #00a8e8;
+            color: #00a8e8;
+        }
+
+        .filter-btn.active {
+            background: #00a8e8;
+            color: white;
+            border-color: #00a8e8;
+        }
+
+        /* Active Repairs Table */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        thead {
+            background: #f5f5f5;
+            border-bottom: 2px solid #ddd;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #0a2342;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            color: #555;
+        }
+
+        tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: #f9f9f9;
+        }
+
+        tbody tr.warning-row {
+            background: #fff3cd;
+        }
+
+        tbody tr.warning-row:hover {
+            background: #ffe8a1;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-badge.in-progress {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-badge.complete {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .days-badge {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .days-badge.normal {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .days-badge.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .days-badge.alert {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        /* Workload Grid */
+        .workload-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .workload-item {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #00a8e8;
+        }
+
+        .workload-item .contractor-name {
+            font-weight: 600;
+            color: #0a2342;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        .workload-item .repair-count {
+            font-size: 24px;
+            color: #00a8e8;
+            font-weight: 700;
+        }
+
+        .workload-item .label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Flags Section */
+        .flag-item {
+            background: #fff3cd;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border-left: 4px solid #ff9800;
+        }
+
+        .flag-item .flag-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            font-size: 14px;
+        }
+
+        .flag-item .customer-info {
+            font-weight: 600;
+            color: #0a2342;
+        }
+
+        .flag-item .board-info {
+            color: #666;
+        }
+
+        .flag-item .flag-text {
+            grid-column: 1 / -1;
+            font-weight: 600;
+            color: #856404;
+            margin-top: 5px;
+        }
+
+        .no-items {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+            font-style: italic;
+        }
+
+        /* Recently Completed */
+        .completed-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .completed-card {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #4caf50;
+        }
+
+        .completed-card .customer-name {
+            font-weight: 600;
+            color: #0a2342;
+            margin-bottom: 8px;
+        }
+
+        .completed-card .board-name {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .completed-card .details {
+            font-size: 12px;
+            color: #999;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+        }
+
+        .completed-card .price {
+            font-weight: 600;
+            color: #4caf50;
+            font-size: 14px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            header h1 {
+                font-size: 24px;
+            }
+
+            header .subtitle {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 10px;
+            }
+
+            .completed-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .flag-item .flag-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            header {
+                padding: 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 20px;
+            }
+
+            th, td {
+                padding: 8px;
+                font-size: 11px;
+            }
+
+            .filter-buttons {
+                flex-direction: column;
+            }
+
+            .filter-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>SPACE ROCK REPAIRS</h1>
+            <div class="subtitle">
+                <div>Repair Tracking Dashboard</div>
+                <div class="timestamp" id="timestamp">Last Updated: March 19, 2026</div>
+            </div>
+        </header>
+
+        <!-- Quick Stats -->
+        <div class="stats-grid" style="grid-template-columns: repeat(5, 1fr);">
+            <div class="stat-card">
+                <h3>Total In Progress</h3>
+                <div class="number" id="stat-in-progress">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>All Time Complete</h3>
+                <div class="number" id="stat-complete">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>This Month Complete</h3>
+                <div class="number" id="stat-month-complete">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Avg Turnaround</h3>
+                <div class="number" id="stat-avg-days">0</div>
+                <div class="unit">days</div>
+            </div>
+            <div class="stat-card">
+                <h3>2026 Revenue</h3>
+                <div class="number" id="stat-revenue">$0</div>
+            </div>
+        </div>
+
+        <!-- Active Repairs -->
+        <div class="section">
+            <div class="section-header">
+                Active Repairs
+                <span class="count" id="active-count">0</span>
+            </div>
+            <div class="section-content">
+                <div class="filter-buttons" id="filter-buttons"></div>
+                <div class="table-wrapper">
+                    <table id="active-table">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Board</th>
+                                <th>Repairs Needed</th>
+                                <th>Intake Date</th>
+                                <th>Contractor</th>
+                                <th>Days in Shop</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="active-tbody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contractor Workload -->
+        <div class="section">
+            <div class="section-header">Contractor Workload</div>
+            <div class="section-content">
+                <div class="workload-grid" id="workload-grid">
+                </div>
+            </div>
+        </div>
+
+        <!-- Recently Completed -->
+        <div class="section">
+            <div class="section-header">
+                Recently Completed
+                <span class="count" id="completed-count">0</span>
+            </div>
+            <div class="section-content">
+                <div class="completed-grid" id="completed-grid">
+                </div>
+            </div>
+        </div>
+
+        <!-- Sheet Photo Folders -->
+        <div class="section">
+            <div class="section-header">
+                Sheet Photos (Google Drive)
+            </div>
+            <div class="section-content" style="padding: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px;">
+                    <div style="text-align: center; font-weight: 600; color: #2F5496; grid-column: 1 / -1; font-size: 14px; margin-bottom: 4px;">2026</div>
+                    <a href="https://drive.google.com/drive/folders/1MyHqjq_Byal93zuKwMg5duikn2_dtJ_I" target="_blank" style="display: block; padding: 14px 16px; background: linear-gradient(135deg, #e8f0fe, #f2f7ff); border-radius: 10px; text-decoration: none; color: #2F5496; font-weight: 600; text-align: center; border: 1px solid #d0dff5; transition: all 0.2s;">MAR 2026</a>
+                    <a href="https://drive.google.com/drive/folders/13I57Tb06ncHIQuuEQorG6K5tZATay6xH" target="_blank" style="display: block; padding: 14px 16px; background: linear-gradient(135deg, #e8f0fe, #f2f7ff); border-radius: 10px; text-decoration: none; color: #2F5496; font-weight: 600; text-align: center; border: 1px solid #d0dff5; transition: all 0.2s;">FEB 2026</a>
+                    <a href="https://drive.google.com/drive/folders/1sEuAKH1HHSr_Q_Ck_eBfwmxaSMV7_e6X" target="_blank" style="display: block; padding: 14px 16px; background: linear-gradient(135deg, #e8f0fe, #f2f7ff); border-radius: 10px; text-decoration: none; color: #2F5496; font-weight: 600; text-align: center; border: 1px solid #d0dff5; transition: all 0.2s;">JAN 2026</a>
+                    <div style="text-align: center; font-weight: 600; color: #2F5496; grid-column: 1 / -1; font-size: 14px; margin-top: 8px; margin-bottom: 4px;">2025</div>
+                    <a href="https://drive.google.com/drive/folders/1X8uiiS_tsGuJJoUdiceuJXs-mJdYKXBm" target="_blank" style="display: block; padding: 14px 16px; background: linear-gradient(135deg, #f0f0f0, #f8f8f8); border-radius: 10px; text-decoration: none; color: #555; font-weight: 600; text-align: center; border: 1px solid #ddd; transition: all 0.2s;">DEC 2025</a>
+                    <a href="https://drive.google.com/drive/folders/1ExpC8wz1fNlmChud0ytH4lOMTt7bIz91" target="_blank" style="display: block; padding: 14px 16px; background: linear-gradient(135deg, #f0f0f0, #f8f8f8); border-radius: 10px; text-decoration: none; color: #555; font-weight: 600; text-align: center; border: 1px solid #ddd; transition: all 0.2s;">NOV 2025</a>
+                    <a href="https://drive.google.com/drive/folders/1t00EEmjXqVcduVnwQ58zPV3dMYtJjFDx" target="_blank" style="display: block; padding: 14px 16px; background: linear-gradient(135deg, #f0f0f0, #f8f8f8); border-radius: 10px; text-decoration: none; color: #555; font-weight: 600; text-align: center; border: 1px solid #ddd; transition: all 0.2s;">OCT 2025</a>
+                    <a href="https://drive.google.com/drive/folders/1yeZ6nxt1aT0L-3hTGkTtJNBMt8xPmbx7" target="_blank" style="display: block; padding: 14px 16px; background: linear-gradient(135deg, #f0f0f0, #f8f8f8); border-radius: 10px; text-decoration: none; color: #555; font-weight: 600; text-align: center; border: 1px solid #ddd; transition: all 0.2s;">SEP 2025</a>
+                    <a href="https://drive.google.com/drive/folders/1j-4-6Ps7ZTMFluYwQvQQZ3z14TkcLz1V" target="_blank" style="display: block; padding: 14px 16px; background: linear-gradient(135deg, #f0f0f0, #f8f8f8); border-radius: 10px; text-decoration: none; color: #555; font-weight: 600; text-align: center; border: 1px solid #ddd; transition: all 0.2s;">AUG 2025</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flags & Attention Items -->
+        <div class="section">
+            <div class="section-header">
+                QC Issues
+                <span class="count" id="flags-count">0</span>
+            </div>
+            <div class="section-content" id="flags-content">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Embedded JSON Data
+        const repairData = [{"id": 1,"status": "In Progress","customer": "Ben Ainsworth","phone": "603-707-9773","email": "be4ainsworth@gmail.com","board": "Redline II","dims": "Not listed","repairs": "Nose ding, Fin box crack, Rail ding (2x)","intake": "01/19/26","arrived": "01/22/26","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": "","payout": "","team": "","employee": "BA","notes": "","flags": "","days": 63},{"id": 2,"status": "In Progress","customer": "","phone": "","email": "","board": "Sunova Torpedo","dims": "","repairs": "","intake": "1/31/0226","arrived": "","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": "","payout": "","team": "","employee": "","notes": "","flags": "","days": ""},{"id": 3,"status": "","customer": "","phone": "","email": "","board": "Thalia Surfcraft","dims": "","repairs": "","intake": "1/31/0226","arrived": "","est_complete": "","contractor": "","claimed": "","date_complete": "","price": "","payout": "","team": "","employee": "","notes": "","flags": "","days": ""},{"id": 4,"status": "Complete","customer": "Xander Kent","phone": "401-302-1649","email": "zanderk27@gmail.com","board": "Lost Pesces","dims": "6'0\"","repairs": "Tail Smash","intake": "02/04/26","arrived": "02/08/26","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "03/03/26","price": 85,"payout": 25.5,"team": "","employee": "Connor","notes": "","flags": "","days": 27},{"id": 5,"status": "In Progress","customer": "Will Dax","phone": "615-618-7984","email": "williamdax@gmail.com","board": "Love Machine","dims": "6'9\"","repairs": "Heel pressure cracks, Puncture + fractures, Rail scratches, Tail cracks","intake": "02/02/26","arrived": "02/08/26","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": "","payout": "","team": "","employee": "Brian Higgins","notes": "","flags": "","days": 49},{"id": 6,"status": "Complete","customer": "Jess Giamattei","phone": "203-710-3242","email": "","board": "Rozburn Cutlass","dims": "Not listed","repairs": "Rail gash, Nose cracks","intake": "01/19/26","arrived": "01/22/26","est_complete": "","contractor": "Tommy S","claimed": "No","date_complete": "02/13/26","price": 200,"payout": 60.0,"team": "","employee": "CA","notes": "","flags": "","days": 25},{"id": 7,"status": "In Progress","customer": "Rob Weston","phone": "508-414-7932","email": "robertlweston44@gmail.com","board": "Torq","dims": "7'8\"","repairs": "Paint chip (unsure if water intrusion), Rail crack","intake": "01/10/26","arrived": "01/14/26","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": "","payout": "","team": "","employee": "Brian Higgins","notes": "Customer wants a quote before starting","flags": "","days": 72},{"id": 8,"status": "In Progress","customer": "Deany Stumand","phone": "772-233-2465","email": "deanystumand@gmail.com","board": "Lost Quiver Killer (Epoxy)","dims": "Not listed","repairs": "Fin box, Small rail ding, Ding on tail, Repaired ding on bottom, Rail work (multiple spots)","intake": "01/13/26","arrived": "01/14/26","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": "","payout": "","team": "","employee": "Reid","notes": "CAME IN WET!!","flags": "PRIORITY","days": 69},{"id": 9,"status": "Complete","customer": "Dante Gaudio","phone": "401-742-6062","email": "","board": "CJ Nelson (Ryan Engle Shape)","dims": "","repairs": "Rail Shatter","intake": "01/03/26","arrived": "01/07/26","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "03/03/26","price": 200,"payout": 60.0,"team": "","employee": "","notes": "","flags": "","days": 59},{"id": 10,"status": "Complete","customer": "Matt DeGroff","phone": "860-805-6010","email": "mdegroff17@gmail.com","board": "Senate","dims": "","repairs": "Nose + rail area (as marked)","intake": "01/03/26","arrived": "01/07/26","est_complete": "01/19/26","contractor": "Gus","claimed": "Yes","date_complete": "03/20/26","price": 200,"payout": 60.0,"team": "","employee": "Brian Higgins","notes": "Requested Gus","flags": "","days": 76},{"id": 11,"status": "Complete","customer": "Matt DeGroff","phone": "860-805-6010","email": "mdegroff17@gmail.com","board": "Ellis","dims": "","repairs": "Rail Ding","intake": "01/03/26","arrived": "01/07/26","est_complete": "01/19/26","contractor": "Gus","claimed": "Yes","date_complete": "03/20/26","price": 120,"payout": 36.0,"team": "","employee": "Brian Higgins","notes": "Requested Gus","flags": "","days": 76},{"id": 12,"status": "In Progress","customer": "Chauncey Smith","phone": "401-536-9077","email": "smikerejanar\u00e1n@gmail.com","board": "Blue Vintage Custom","dims": "6'0\"","repairs": "Clean Up Minor Resto/sentimental repair","intake": "01/03/26","arrived": "01/07/26","est_complete": "02/01/26","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": "","payout": "","team": "","employee": "Brian Higgins","notes": "See detailed notes and bad with fin provided","flags": "","days": 79},{"id": 13,"status": "Complete","customer": "Allen S","phone": "","email": "","board": "Christensen C-Bucket","dims": "7'6\"","repairs": "Nose Ding","intake": "12/20/25","arrived": "01/07/26","est_complete": "01/19/26","contractor": "Tommy S","claimed": "Yes","date_complete": "01/31/26","price": 185,"payout": 55.5,"team": "Yes","employee": "AS","notes": "","flags": "","days": 42},{"id": 14,"status": "Complete","customer": "Claire Hodson","phone": "","email": "","board": "Thomas Keeper","dims": "9'7\"","repairs": "Mulitple Shatters","intake": "","arrived": "","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "12/29/25","price": 400,"payout": 120.0,"team": "Yes","employee": "","notes": "","flags": "","days": ""},{"id": 15,"status": "In Progress","customer": "Ray Pine","phone": "414-414-0241","email": "ray.pine5@icloud.com","board": "Rozburn Plank","dims": "10'7\"","repairs": "Tail Gash, finbox, Rail check","intake": "12/22/25","arrived": "12/29/25","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": "","payout": "","team": "","employee": "Connor","notes": "","flags": "QC: messed up tail, needs complete redo","days": 91},{"id": 16,"status": "In Progress","customer": "Mark Nelly","phone": "401-284-0008","email": "gansetmark@gmail.com","board": "WRV","dims": "10'","repairs": "Finbox, Rail shatters, wants watertight","intake": "12/08/25","arrived": "12/29/25","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": "","payout": "","team": "","employee": "Connor","notes": "","flags": "","days": 105},{"id": 17,"status": "","customer": "Sven Wodenstern","phone": "401-864-5110","email": "swodenstern@gmail.com","board": "PYZEL","dims": "6'4\"","repairs": "Pin needs to be adjusted on the leash plug","intake": "12/20/25","arrived": "12/29/25","est_complete": "01/10/25","contractor": "","claimed": "No","date_complete": "","price": "","payout": "","team": "","employee": "Brian Higgins","notes": "","flags": "","days": 93},{"id": 18,"status": "Complete","customer": "RISCO","phone": "","email": "","board": "Rozburn","dims": "7'0\"","repairs": "Rail Ding","intake": "12/10/25","arrived": "12/10/25","est_complete": "12/28/25","contractor": "Gus","claimed": "Yes","date_complete": "12/29/25","price": 60,"payout": 18.0,"team": "","employee": "SR INTAKE","notes": "Did not run through MTK","flags": "","days": 19},{"id": 19,"status": "Complete","customer": "Louis Arnas","phone": "781-883-9534","email": "l.arnas@protonmail.com","board": "Clean Ocean","dims": "","repairs": "Nose Job/Fin Box","intake": "12/07/25","arrived": "12/10/25","est_complete": "12/28/25","contractor": "Gus","claimed": "Yes","date_complete": "12/29/25","price": 85,"payout": 25.5,"team": "","employee": "AS","notes": "Customer is asking for the repair as soon as possible because it\u2019s the only longboard they own.","flags": "","days": 22},{"id": 20,"status": "In Progress","customer": "Jon Bell","phone": "401-792-5099","email": "","board": "Woody Resin","dims": "9'0\"","repairs": "Rail Ding/Make Water Tight","intake": "12/06/25","arrived": "12/10/25","est_complete": "12/28/25","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": "","payout": "","team": "","employee": "","notes": "","flags": "QC Issue","days": 107},{"id": 21,"status": "In Progress","customer": "Daniel Shallcross","phone": "732-639-3377","email": "dshallcross31@gmail.com","board": "NSP","dims": "7'6","repairs": "Rail Ding","intake": "12/03/25","arrived": "12/10/25","est_complete": "12/28/25","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": "","payout": "","team": "","employee": "Tom S","notes": "Home for school the 19th","flags": "","days": 110},{"id": 22,"status": "In Progress","customer": "Dylan Curran","phone": "203-216-6907","email": "currand@my.eastonct.edu","board": "Rozburn","dims": "9'6\"","repairs": "Bottom Ding - having issue seeing it","intake": "11/16/25","arrived": "11/19/25","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": "","payout": "","team": "","employee": "Tom S","notes": "Call customer to verivy repair","flags": "","days": 127},{"id": 23,"status": "Complete","customer": "MTK DEMO","phone": "","email": "","board": "SMTH","dims": "5'8\"","repairs": "Clean- up MTK Demo Bottom gash","intake": "11/12/25","arrived": "11/12/25","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": 60,"payout": 18.0,"team": "Yes","employee": "Tom S","notes": "","flags": "Repairs ","days": 131},{"id": 24,"status": "In Progress","customer": "MTK DEMO","phone": "","email": "","board": "Sunovas","dims": "6'1\"","repairs": "Nose Ding/Clean up","intake": "11/12/25","arrived": "11/12/25","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": "","payout": "","team": "","employee": "","notes": "","flags": "started 12.17","days": 131},{"id": 25,"status": "Complete","customer": "MTK DEMO","phone": "","email": "","board": "AJW Fish","dims": "5'7\"","repairs": "Clean- up MTK Demo Tail gash","intake": "11/12/25","arrived": "11/12/25","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "01/31/26","price": 150,"payout": 45.0,"team": "","employee": "","notes": "","flags": "started 12.17","days": 80},{"id": 26,"status": "","customer": "MTK DEMO","phone": "","email": "","board": "AJW Fish Yellow","dims": "5'7\"","repairs": "Clean- up MTK Demo lots of repairs","intake": "11/12/25","arrived": "11/12/25","est_complete": "","contractor": "","claimed": "","date_complete": "","price": "","payout": "","team": "","employee": "","notes": "","flags": "","days": 131},{"id": 27,"status": "In Progress","customer": "Jordan Keeler","phone": "203-216-6278","email": "jpk433@yahoo.com","board": "RI Surf Co","dims": "9'2\"","repairs": "Single Finbox Only ","intake": "11/10/25","arrived": "11/12/25","est_complete": "11/27/25","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": "","payout": "","team": "","employee": "AS","notes": "","flags": "","days": 133},{"id": 28,"status": "In Progress","customer": "James jurgens","phone": "413-668-7461","email": "jamesjurgens@gmail.com","board": "Lopez","dims": "9'2\"","repairs": "11+ Repairs Wanter water tight","intake": "10/22/25","arrived": "11/05/25","est_complete": "11/25/25","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": "","payout": "","team": "","employee": "Brian Higgins","notes": "CUSTOMER WANTS QUOTE BEFORE WORK!!!!!","flags": "","days": 152},{"id": 29,"status": "Complete","customer": "Evan Rossi","phone": "508-570-6177","email": "evanrossi15@icloud.com","board": "AQSS","dims": "9'4\"","repairs": "Rail Gashx2/Tail Ding","intake": "10/19/22","arrived": "11/05/25","est_complete": "11/20/22","contractor": "Matt","claimed": "Yes","date_complete": "02/08/26","price": 65,"payout": 19.5,"team": "","employee": "Brian Higgins","notes": "","flags": "","days": 1208},{"id": 30,"status": "Complete","customer": "Morgan Parker","phone": "401-871-4292","email": "morganwparker@gmail.com","board": "Slug","dims": "6'6\"","repairs": "Center Fin Delam ONLY","intake": "10/17/25","arrived": "11/05/25","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "01/31/26","price": 250,"payout": 75.0,"team": "","employee": "Tom S","notes": "ONLY FIN WORK DNT ANYTHIGN ELSE","flags": "","days": 106},{"id": 31,"status": "Complete","customer": "ClaireH","phone": "","email": "","board": "LORD","dims": "9+","repairs": "Mulitple Dings/Possible Delam/Nose Job","intake": "","arrived": "","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "11/22/25","price": 135,"payout": 40.5,"team": "Yes","employee": "","notes": "","flags": "NO SHEET","days": ""},{"id": 32,"status": "Complete","customer": "Rich Frisbie","phone": "413-519-2068","email": "rcfrisbie@gmail.com","board": "Bruce Jones","dims": "9'6\"","repairs": "Finbox ","intake": "10/19/25","arrived": "11/19/25","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": 175,"payout": 52.5,"team": "","employee": "Tom S","notes": "Came in Oct. but was naot take to SR because sock hid sheet","flags": "","days": 155},{"id": 33,"status": "Complete","customer": "Sam Grimley","phone": "603-661-2099","email": "sam.grimley7@gmail.com","board": "Brother","dims": "6'7\"","repairs": "Tail Repair","intake": "11/12/25","arrived": "11/12/25","est_complete": "11/27/25","contractor": " Alicia","claimed": "Yes","date_complete": "11/22/25","price": 110,"payout": 33.0,"team": "","employee": "Unknown","notes": "","flags": "","days": 10},{"id": 34,"status": "Complete","customer": "Carlos Romero","phone": "617-834-5636","email": "solraloremor@gmail.com","board": "Somma","dims": "5'11\"","repairs": "Bottom Dings","intake": "11/09/25","arrived": "11/12/25","est_complete": "11/27/25","contractor": "Gus","claimed": "Yes","date_complete": "12/29/25","price": 175,"payout": 52.5,"team": "","employee": "Tom S","notes": "","flags": "","days": 50},{"id": 35,"status": "Complete","customer": "Dirk Peters","phone": "509-392-1618","email": "rocksandwaves@gamil.com","board": "Lovelace","dims": "7'6\"","repairs": "4 Dings","intake": "11/05/25","arrived": "11/12/25","est_complete": "11/27/25","contractor": "Gus","claimed": "Yes","date_complete": "02/20/26","price": 140,"payout": 42.0,"team": "","employee": "Brian Higgins","notes": "","flags": "","days": 107},{"id": 36,"status": "Complete","customer": "George Sladoje","phone": "847-442-6904","email": "georgescoonsladoje@gmail.com","board": "Lost","dims": "5'6\"","repairs": "Bottom Puncture","intake": "10/22/25","arrived": "","est_complete": "11/15/25","contractor": "Gus","claimed": "Yes","date_complete": "11/14/25","price": 70,"payout": 21.0,"team": "","employee": "Brian Higgins","notes": "","flags": "","days": 23},{"id": 37,"status": "Complete","customer": "Peyton Carpenter","phone": "860-558-0269","email": "peepscarpenter@gmail.com","board": "Christenen","dims": "5'10\"","repairs": "Pressure Ding/Scratch","intake": "11/01/25","arrived": "11/05/25","est_complete": "11/15/25","contractor": "Gus","claimed": "Yes","date_complete": "11/21/25","price": 175,"payout": 52.5,"team": "","employee": "Brian Higgins","notes": "","flags": "","days": 20},{"id": 38,"status": "Complete","customer": "Lyse Lepine","phone": "401-268-3435","email": "llepine@cox.net","board": "RAVE SUP","dims": "11'","repairs": "Nose Repair/Mulitpe Rail Dings","intake": "08/11/25","arrived": "","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "11/19/25","price": 325,"payout": 97.5,"team": "","employee": "Connor","notes": "","flags": "Over 6 Weeks","days": 100},{"id": 39,"status": "In Progress","customer": "Donna Gaumond","phone": "401-749-5187","email": "gaumand@gmail.com","board": "Inception SUP","dims": "11'","repairs": "Multiple Rail Dings","intake": "08/12/25","arrived": "","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": "","payout": "","team": "","employee": "Unknown","notes": "Not Started/Qutoed $350","flags": "QC: white paint splats, rough surface, dusty","days": 223},{"id": 40,"status": "Complete","customer": "Phillip Amason","phone": "904-333-7175","email": "pmamason.88@gmail.com","board": "WRV","dims": "6'6\"","repairs": "Rail Crack/Bottom Rear Right Rail Crack","intake": "08/22/25","arrived": "","est_complete": "","contractor": "John","claimed": "Yes","date_complete": "","price": 0,"payout": 0.0,"team": "","employee": "John O.","notes": "Need status confirmed/QC Issue NO CHARGE","flags": "","days": 213},{"id": 41,"status": "Complete","customer": "Luca Spinazzola","phone": "401-741-3028","email": "mspinluca@gmail.com","board": "Freefall Cosmic Twin","dims": "6'6\"","repairs": "Fin Explosion/Tail Dings","intake": "09/01/25","arrived": "","est_complete": "10/10/25","contractor": "Tommy S","claimed": "Yes","date_complete": "10/21/25","price": 350,"payout": 105.0,"team": "","employee": "AS","notes": "Neede wipe down","flags": "Over 4 Weeks","days": 50},{"id": 42,"status": "Complete","customer": "Nicholas Curran","phone": "413-374-7654","email": "nicholas@curran.tech","board": "NSP","dims": "10'","repairs": "Rail Ding","intake": "09/02/25","arrived": "","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "10/21/25","price": 100,"payout": 30.0,"team": "","employee": "Brian Higgins","notes": "Neede wipe down","flags": "Over 4 Weeks","days": 49},{"id": 43,"status": "Complete","customer": "Michael Ferra","phone": "860-912-0112","email": "mikef@jaypro.com","board": "Naish/Global","dims": "5'9\"","repairs": "Rail Crack/Tail Ding w/Water in it","intake": "09/14/25","arrived": "","est_complete": "10/24/25","contractor": "Tommy S","claimed": "Yes","date_complete": "12/01/25","price": 175,"payout": 52.5,"team": "","employee": "Unknown","notes": "","flags": "Over 4 Weeks","days": 78},{"id": 44,"status": "Complete","customer": "Jordan Pintp","phone": "860-313-9039","email": "jordan.pinto@icloud.com","board": "Modern","dims": "8'4\"","repairs": "Bottom gash/home repair fix","intake": "09/22/25","arrived": "","est_complete": "10/21/25","contractor": " Alicia","claimed": "Yes","date_complete": "10/05/25","price": 110,"payout": 33.0,"team": "","employee": "Unknown","notes": "","flags": "Over 4 Weeks","days": 13},{"id": 45,"status": "Complete","customer": "Henry Kithe","phone": "917-882-1459","email": "henrykithe@gmail.com","board": "Rozburn","dims": "5'11\"","repairs": "Glass in Fin Fix Up","intake": "09/22/25","arrived": "","est_complete": "","contractor": " Alicia","claimed": "Yes","date_complete": "10/10/25","price": "","payout": "","team": "","employee": "AS","notes": "Unknown Status/Contractor","flags": "QC Issue","days": 18},{"id": 46,"status": "Complete","customer": "Michael Worosz","phone": "206-930-4914","email": "worosz@gmail.com","board": "Album","dims": "5'11\"","repairs": "Swallow Tail ","intake": "09/30/25","arrived": "10/06/25","est_complete": "10/21/25","contractor": "Gus","claimed": "Yes","date_complete": "11/19/25","price": 200,"payout": 60.0,"team": "","employee": "Unknown","notes": "","flags": "Over 4 Weeks","days": 50},{"id": 47,"status": "Complete","customer": "Chris Kinsella","phone": "619-279-1425","email": "chriskinsella94@yahoo.com","board": "Josh Oldenburg","dims": "5'9\"","repairs": "Fin Clean-Up/Bottom Gash","intake": "09/30/25","arrived": "","est_complete": "10/21/25","contractor": " Alicia","claimed": "Yes","date_complete": "11/22/22","price": 230,"payout": 69.0,"team": "","employee": "Unknown","notes": "","flags": "QC ISSUE","days": -1043},{"id": 48,"status": "","customer": "Diane Hassett","phone": "408-313-2037","email": "DianeTran@gmail.com","board": "Soundings","dims": "9'2\"","repairs": "Crsuhed Nose/Check for other reapirs and complete","intake": "10/01/25","arrived": "10/06/25","est_complete": "10/20/25","contractor": "Matt","claimed": "Yes","date_complete": "","price": "","payout": "","team": "","employee": "Brian Higgins","notes": "","flags": "","days": 173},{"id": 49,"status": "Complete","customer": "Chet Terry","phone": "860-539-3904","email": "funkvontubin@yahoo.com","board": "Roger Hinds","dims": "7'6\"","repairs": "Finbox Bottom Left","intake": "10/03/25","arrived": "10/06/25","est_complete": "10/20/25","contractor": "Tommy S","claimed": "Yes","date_complete": "11/25/25","price": 175,"payout": 52.5,"team": "","employee": "Brian Higgins","notes": "","flags": "","days": 53},{"id": 50,"status": "Complete","customer": "Peter Daitch","phone": "860-388-8579","email": "j.daitch@icloud.com","board": "Starboard SUP","dims": "8'3\"","repairs": "Bottom Dings x2","intake": "10/03/25","arrived": "10/08/25","est_complete": "10/22/25","contractor": "Tommy S","claimed": "Yes","date_complete": "11/19/25","price": 250,"payout": 75.0,"team": "","employee": "Brian Higgins","notes": "","flags": "","days": 47},{"id": 51,"status": "Complete","customer": "Jack Feeney","phone": "401-255-8171","email": "john.feeney96@gmail.com","board": "CI Feb Fish","dims": "5'10\"","repairs": "Nose Job/Fin Box","intake": "10/05/25","arrived": "10/06/25","est_complete": "10/20/25","contractor": "Tommy S","claimed": "Yes","date_complete": "11/19/25","price": 300,"payout": 90.0,"team": "","employee": "AS","notes": "","flags": "","days": 45},{"id": 52,"status": "Complete","customer": "Scott Toth","phone": "203-913-7462","email": "stoth1313@gmail.com","board": "MTK Surf Co.","dims": "7'6\"","repairs": "3 Rail Sahtters","intake": "10/13/25","arrived": "10/15/25","est_complete": "11/04/25","contractor": "Tommy S","claimed": "Yes","date_complete": "11/19/25","price": 0,"payout": 0.0,"team": "","employee": "Unknown","notes": "NO CHARGE WIND TOOK IT","flags": "","days": 37},{"id": 53,"status": "Complete","customer": "Drew Nola","phone": "805-535-5339","email": "drewnola96@gmail.com","board": "Soudings Fish/Twin","dims": "7'8\"","repairs": "3 rail dings + fix up old work","intake": "10/15/25","arrived": "11/03/25","est_complete": "11/14/25","contractor": "Gus","claimed": "Yes","date_complete": "11/14/25","price": 125,"payout": 37.5,"team": "","employee": "Brian Higgins","notes": "","flags": "","days": 30},{"id": 54,"status": "Complete","customer": "Drew Nola","phone": "805-535-5339","email": "drewnola96@gmail.com","board": "Soundings Thruster","dims": "6'3\"","repairs": "Rail Ding","intake": "10/15/25","arrived": "11/03/25","est_complete": "11/14/25","contractor": "Gus","claimed": "Yes","date_complete": "11/14/25","price": 74,"payout": 22.2,"team": "","employee": "Unknown","notes": "","flags": "","days": 30},{"id": 55,"status": "Complete","customer": "Tyler Forrest","phone": "203-313-3803","email": "tylerforrest010@gmail.com","board": "Stewart Finline 11","dims": "7'0\"","repairs": "Fin Boxes & Nose Check","intake": "10/15/25","arrived": "11/03/25","est_complete": "","contractor": " Alicia","claimed": "Yes","date_complete": "11/22/25","price": 85,"payout": 25.5,"team": "","employee": "Unknown","notes": "Check customer repair on nose for water tight","flags": "QC ISSUE","days": 38},{"id": 56,"status": "Complete","customer": "Chris Budnick","phone": "860-985-5281","email": "cbudnick@vanguardplastics.com","board": "RAWSON SUP","dims": "9'0\"","repairs": "Mulitple Dings/Possible Delam/Nose Job","intake": "10/17/25","arrived": "11/15/25","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "12/09/25","price": 200,"payout": 60.0,"team": "","employee": "AS","notes": "Possibly WET","flags": "","days": 53},{"id": 57,"status": "Complete","customer": "Mark Graber","phone": "518-859-7745","email": "williamgrabber58@gmail.com","board": "Greg Step Deck Koll","dims": "9'2\"","repairs": "Rail Ding","intake": "10/18/25","arrived": "10/21/25","est_complete": "10/30/25","contractor": "Gus","claimed": "Yes","date_complete": "11/25/25","price": 100,"payout": 30.0,"team": "","employee": "Unknown","notes": "","flags": "","days": 38},{"id": 58,"status": "Complete","customer": "PILGRIM","phone": "","email": "","board": "PILGRIM Andreini","dims": "10+","repairs": "Bottom Ding","intake": "","arrived": "","est_complete": "10/10/25","contractor": "Tommy S","claimed": "Yes","date_complete": "12/03/25","price": 200,"payout": 60.0,"team": "","employee": "","notes": "Last of the Batch","flags": "","days": ""},{"id": 59,"status": "Complete","customer": "UNKNOWN","phone": "UNKNOWN","email": "UNKNOWN","board": "Rozburn","dims": "5'8\"","repairs": "Nose/Rail/Bottom Gash","intake": "","arrived": "","est_complete": "","contractor": " Alicia","claimed": "Yes","date_complete": "10/10/25","price": "","payout": "","team": "","employee": "Unknown","notes": "NO SHEET","flags": "NO SHEET","days": ""},{"id": 60,"status": "Complete","customer": "Sven Wadensten","phone": "401-864-5110","email": "swadensten@gmail.com","board": "Slater/Woo","dims": "","repairs": "Nose/Left Bottom Rail/Fix anything","intake": "","arrived": "","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "12/03/25","price": 175,"payout": 52.5,"team": "","employee": "Unknown","notes": "Unknwn intake dates/Where is the board?","flags": "","days": ""},{"id": 61,"status": "Complete","customer": "Patrick Meffert","phone": "401-449-1067","email": "meffert.patrick@gmail.com","board": "Yellow Brd","dims": "","repairs": "Bottom Repair","intake": "","arrived": "","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "10/21/25","price": 375,"payout": 112.5,"team": "","employee": "Unknown","notes": "Quoted $300-$350","flags": "","days": ""},{"id": 62,"status": "Complete","customer": "Andrew Barboza","phone": "401-291-8909","email": "andrewb0809@gmail.com","board": "Zap Skim Board","dims": "","repairs": "Rail Dings x2, Make Water Tight","intake": "","arrived": "","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "10/05/25","price": 85,"payout": 25.5,"team": "","employee": "Unknown","notes": "Unknwn intake dates","flags": "","days": ""},{"id": 63,"status": "Complete","customer": "Allen","phone": "","email": "","board": "Rozburn","dims": "","repairs": "Multiple repairs","intake": "","arrived": "","est_complete": "","contractor": "Matt","claimed": "","date_complete": "02/13/26","price": 225,"payout": 67.5,"team": "Yes","employee": "","notes": "This was left over form Alica","flags": "","days": ""},{"id": 64,"status": "In Progress","customer": "Mike Wonosz","phone": "206-930-4914","email": "wonosz2@gmail.com","board": "Hypto Krypto","dims": "","repairs": "Big Dent, Finbox Crack","intake": "03/06/26","arrived": "","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": "","payout": "","team": "","employee": "CA","notes": "","flags": "","days": 17},{"id": 65,"status": "In Progress","customer": "AJ Bonte","phone": "","email": "","board": "Lost Mayhem","dims": "","repairs": "Tail Tips, Nose Ding","intake": "02/07/26","arrived": "","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": "","payout": "","team": "","employee": "Connor","notes": "","flags": "","days": 44},{"id": 66,"status": "In Progress","customer": "Mike Wonosz","phone": "206-930-4914","email": "wonosz2@gmail.com","board": "JS Raging Bull","dims": "","repairs": "Finbox","intake": "03/06/26","arrived": "","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": "","payout": "","team": "","employee": "","notes": "","flags": "","days": 17},{"id": 67,"status": "In Progress","customer": "Conor Kennedy","phone": "575-246-3545","email": "","board": "Heinrich Shapes","dims": "5'11\"","repairs": "Tail Tips, Rail Crack, Watertight, Resin Bump","intake": "","arrived": "","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": "","payout": "","team": "","employee": "CA","notes": "","flags": "","days": ""},{"id": 68,"status": "In Progress","customer": "Mike Wonosz","phone": "206-930-4914","email": "wonosz2@gmail.com","board": "JS Monsta","dims": "","repairs": "Tail Ding","intake": "03/06/26","arrived": "","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": "","payout": "","team": "","employee": "CA","notes": "","flags": "","days": 17},{"id": 69,"status": "In Progress","customer": "Armstrong","phone": "","email": "","board": "Lost Puddle Jumper","dims": "","repairs": "Finbox Blow Out","intake": "","arrived": "","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": "","payout": "","team": "","employee": "","notes": "","flags": "","days": ""},{"id": 70,"status": "In Progress","customer": "Mike Wonosz","phone": "206-930-4914","email": "wonosz2@gmail.com","board": "Arkania","dims": "","repairs": "Nose, Tail, Body Dings","intake": "03/06/26","arrived": "","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": "","payout": "","team": "","employee": "CA","notes": "","flags": "","days": 17},{"id": 71,"status": "Complete","customer": "Gunnar Berg","phone": "774-762-0465","email": "Gunnarberg@icloud.com","board": "Vaj","dims": "7'4\"","repairs": "Ding + Split Apart, Rail Crack, Tail Shatters, Make Watertight","intake": "02/16/26","arrived": "","est_complete": "","contractor": "","claimed": "","date_complete": "03/20/26","price": 150,"payout": 45.0,"team": "","employee": "Danny H","notes": "Glass/Polish: Yes","flags": "","days": 32},{"id": 72,"status": "In Progress","customer": "Michael Ferraro","phone": "360-917-0112","email": "","board": "Naish","dims": "","repairs": "Nose Ding","intake": "","arrived": "03/20/26","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": "","payout": "","team": "","employee": "TS","notes": "","flags": "","days": ""},{"id": 73,"status": "In Progress","customer": "Brian Menilka","phone": "401-226-8740","email": "Bmenilka446@yahoo.com","board": "FC Patagonia","dims": "","repairs": "Rail Ding","intake": "","arrived": "03/20/26","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": "","payout": "","team": "","employee": "","notes": "","flags": "","days": ""},{"id": 74,"status": "In Progress","customer": "MTK Shop Board","phone": "","email": "","board": "Rozburn","dims": "","repairs": "Needs to be looked over and redone","intake": "","arrived": "03/20/26","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": "","payout": "","team": "","employee": "","notes": "","flags": "Not a priority. Blue/yellow.","days": ""},{"id": 75,"status": "In Progress","customer": "MTK Shop Board","phone": "","email": "","board": "Rozburn","dims": "","repairs": "Redo and go over","intake": "","arrived": "03/20/26","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": "","payout": "","team": "","employee": "","notes": "","flags": "Not a priority. Clear blank, brown/green dots.","days": ""},{"id": 76,"status": "In Progress","customer": "Jesse Fitzmaurice","phone": "","email": "","board": "McKee","dims": "9'1\"","repairs": "","intake": "","arrived": "03/20/26","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": 500,"payout": 150.0,"team": "","employee": "","notes": "","flags": "","days": ""},{"id": 77,"status": "In Progress","customer": "Former MTK Employee","phone": "","email": "","board": "Gordon and Smith","dims": "","repairs": "","intake": "","arrived": "03/20/26","est_complete": "","contractor": "Tommy S","claimed": "Yes","date_complete": "","price": "","payout": "","team": "","employee": "","notes": "","flags": "Yellow and clear.","days": ""},{"id": 78,"status": "Complete","customer": "Justin Fonseca","phone": "","email": "","board": "Christian Beamish","dims": "","repairs": "","intake": "","arrived": "","est_complete": "","contractor": "","claimed": "","date_complete": "03/03/26","price": 80,"payout": 24.0,"team": "","employee": "","notes": "","flags": "","days": ""},{"id": 79,"status": "Complete","customer": "B. Higgy","phone": "","email": "","board": "CI Fish","dims": "","repairs": "7 Dings, Fin Box","intake": "","arrived": "","est_complete": "","contractor": "","claimed": "","date_complete": "03/03/26","price": 350,"payout": 105.0,"team": "","employee": "","notes": "","flags": "","days": ""}];
+
+        let currentFilter = null;
+
+        function initializeDashboard() {
+            updateStats();
+            renderActiveRepairs();
+            renderWorkload();
+            renderRecentlyCompleted();
+            renderFlags();
+        }
+
+        function isActive(repair) {
+            const hasInProgressStatus = repair.status === "In Progress";
+            const hasNoStatusAndNoComplete = (!repair.status || repair.status === "") && !repair.date_complete;
+            return hasInProgressStatus || hasNoStatusAndNoComplete;
+        }
+
+        function getActiveRepairs() {
+            return repairData.filter(isActive).sort((a, b) => {
+                const daysA = parseInt(a.days) || 0;
+                const daysB = parseInt(b.days) || 0;
+                return daysB - daysA;
+            });
+        }
+
+        function updateStats() {
+            const active = getActiveRepairs();
+            const completed = repairData.filter(r => r.status === "Complete");
+
+            document.getElementById('stat-in-progress').textContent = active.length;
+            document.getElementById('stat-complete').textContent = completed.length;
+
+            // This month complete (March 2026)
+            const thisMonthComplete = completed.filter(r => {
+                if (!r.date_complete) return false;
+                return r.date_complete.startsWith('03/') && r.date_complete.endsWith('/26');
+            });
+            document.getElementById('stat-month-complete').textContent = thisMonthComplete.length;
+
+            // Calculate average turnaround
+            let validDays = [];
+            completed.forEach(r => {
+                const days = parseInt(r.days);
+                if (days > 0 && days < 500) {
+                    validDays.push(days);
+                }
+            });
+            const avgDays = validDays.length > 0 ? Math.round(validDays.reduce((a, b) => a + b, 0) / validDays.length) : 0;
+            document.getElementById('stat-avg-days').textContent = avgDays;
+
+            // Calculate 2026 revenue only
+            let revenue = 0;
+            repairData.forEach(r => {
+                const price = parseFloat(r.price);
+                if (price > 0 && r.date_complete && r.date_complete.endsWith('/26')) {
+                    revenue += price;
+                }
+            });
+            document.getElementById('stat-revenue').textContent = '$' + revenue.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+        }
+
+        function getContractors() {
+            const contractors = new Set();
+            getActiveRepairs().forEach(r => {
+                if (r.contractor && r.contractor.trim()) {
+                    contractors.add(r.contractor.trim());
+                }
+            });
+            return Array.from(contractors).sort();
+        }
+
+        function renderFilterButtons() {
+            const filtersContainer = document.getElementById('filter-buttons');
+            filtersContainer.innerHTML = '';
+
+            const allBtn = document.createElement('button');
+            allBtn.textContent = 'All Contractors';
+            allBtn.className = 'filter-btn' + (currentFilter === null ? ' active' : '');
+            allBtn.onclick = () => {
+                currentFilter = null;
+                renderFilterButtons();
+                renderActiveRepairs();
+            };
+            filtersContainer.appendChild(allBtn);
+
+            getContractors().forEach(contractor => {
+                const btn = document.createElement('button');
+                btn.textContent = contractor;
+                btn.className = 'filter-btn' + (currentFilter === contractor ? ' active' : '');
+                btn.onclick = () => {
+                    currentFilter = contractor;
+                    renderFilterButtons();
+                    renderActiveRepairs();
+                };
+                filtersContainer.appendChild(btn);
+            });
+        }
+
+        function renderActiveRepairs() {
+            renderFilterButtons();
+
+            const active = getActiveRepairs();
+            const filtered = currentFilter ? active.filter(r => r.contractor && r.contractor.trim() === currentFilter) : active;
+
+            document.getElementById('active-count').textContent = filtered.length;
+
+            const tbody = document.getElementById('active-tbody');
+            tbody.innerHTML = '';
+
+            if (filtered.length === 0) {
+                const row = tbody.insertRow();
+                row.innerHTML = '<td colspan="7" class="no-items">No active repairs</td>';
+                return;
+            }
+
+            filtered.forEach(repair => {
+                const row = tbody.insertRow();
+                const days = parseInt(repair.days) || 0;
+
+                if (days > 60) {
+                    row.className = 'warning-row';
+                }
+
+                const daysBadgeClass = days > 60 ? 'alert' : days > 30 ? 'warning' : 'normal';
+
+                row.innerHTML = `
+                    <td>${repair.customer || '-'}</td>
+                    <td>${repair.board || '-'}</td>
+                    <td>${repair.repairs || '-'}</td>
+                    <td>${repair.intake || '-'}</td>
+                    <td>${repair.contractor || '-'}</td>
+                    <td><span class="days-badge ${daysBadgeClass}">${days}</span></td>
+                    <td style="font-size: 12px; color: #666;">${repair.notes || '-'}</td>
+                `;
+            });
+        }
+
+        function renderWorkload() {
+            const workloads = {};
+
+            getActiveRepairs().forEach(r => {
+                const contractor = r.contractor && r.contractor.trim() ? r.contractor.trim() : 'Unassigned';
+                workloads[contractor] = (workloads[contractor] || 0) + 1;
+            });
+
+            const sorted = Object.entries(workloads).sort((a, b) => b[1] - a[1]);
+
+            const grid = document.getElementById('workload-grid');
+            grid.innerHTML = '';
+
+            if (sorted.length === 0) {
+                grid.innerHTML = '<div class="no-items" style="grid-column: 1/-1;">No active contractors</div>';
+                return;
+            }
+
+            sorted.forEach(([contractor, count]) => {
+                const item = document.createElement('div');
+                item.className = 'workload-item';
+                item.innerHTML = `
+                    <div class="contractor-name">${contractor}</div>
+                    <div class="repair-count">${count}</div>
+                    <div class="label">Active Repairs</div>
+                `;
+                grid.appendChild(item);
+            });
+        }
+
+        function renderRecentlyCompleted() {
+            const completed = repairData.filter(r => r.status === "Complete" && r.date_complete).sort((a, b) => {
+                return new Date(b.date_complete) - new Date(a.date_complete);
+            }).slice(0, 10);
+
+            document.getElementById('completed-count').textContent = completed.length;
+
+            const grid = document.getElementById('completed-grid');
+            grid.innerHTML = '';
+
+            if (completed.length === 0) {
+                grid.innerHTML = '<div class="no-items" style="grid-column: 1/-1;">No completed repairs</div>';
+                return;
+            }
+
+            completed.forEach(repair => {
+                const card = document.createElement('div');
+                card.className = 'completed-card';
+                const price = repair.price ? '$' + repair.price : '-';
+                card.innerHTML = `
+                    <div class="customer-name">${repair.customer || 'Unknown'}</div>
+                    <div class="board-name">${repair.board}</div>
+                    <div class="details">
+                        <div>
+                            <strong>Completed:</strong> ${repair.date_complete || '-'}<br>
+                            <strong>Contractor:</strong> ${repair.contractor || '-'}
+                        </div>
+                        <div class="price">${price}</div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderFlags() {
+            const flagged = repairData.filter(r => {
+                if (!isActive(r)) return false;
+                if (!r.flags || !r.flags.trim()) return false;
+                const flag = r.flags.trim().toUpperCase();
+                return flag.includes('QC');
+            });
+
+            document.getElementById('flags-count').textContent = flagged.length;
+
+            const container = document.getElementById('flags-content');
+            container.innerHTML = '';
+
+            if (flagged.length === 0) {
+                container.innerHTML = '<div class="no-items">No flagged items</div>';
+                return;
+            }
+
+            flagged.forEach(repair => {
+                const item = document.createElement('div');
+                item.className = 'flag-item';
+                item.innerHTML = `
+                    <div class="flag-content">
+                        <div>
+                            <div class="customer-info">${repair.customer || 'Unknown'}</div>
+                            <div class="board-info">${repair.board}</div>
+                        </div>
+                        <div style="font-size: 12px; color: #666;">
+                            <strong>Status:</strong> ${repair.status || 'Pending'}<br>
+                            <strong>Days:</strong> ${repair.days || '-'}
+                        </div>
+                        <div class="flag-text">${repair.flags}</div>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', initializeDashboard);
+    </script>
+</body>
+</html>
